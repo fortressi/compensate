@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "language-server": {
+      "command": "mcp-language-server",
+      "args": ["--workspace", "/Users/morganj/data/projects/github.com/fortressi/compensate", "--lsp", "gopls"],
+      "env": {
+        "GOPATH": "/users/morganj/go"
+      }
+    },
+    "git": {
+      "command":  "git-mcp-go",
+    "args": ["serve", "-r", "/Users/morganj/data/projects/github.com/fortressi/compensate/"]
+    }
+  }
+}
+

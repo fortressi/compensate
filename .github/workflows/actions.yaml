@@ -1,0 +1,72 @@
+name: Go Test
+
+run-name: ${{ github.actor }} is testing out GitHub Actions 🚀
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "cmd/**"
+      - "pkg/**"
+      - "go.mod"
+      - "go.sum"
+  pull_request:
+    branches: 
+      - main
+    paths:
+      - "cmd/**"
+      - "pkg/**"
+      - "go.mod"
+      - "go.sum"
+
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Restore Go cache
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build        
+            ~/.cache/golangci-lint
+          # always grab from the restore-keys pattern below,
+          # like Linux-go-$hash-YYYY-MM-DD as saved by CI
+          key: nonexistent
+          restore-keys: |
+            ${{ runner.os }}-golang-
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+      - name: Test with the Go CLI
+        run: go test -race ./...
+      - name: Trim Go cache
+        if: ${{ github.ref == 'refs/heads/main' }}
+        shell: bash
+        # As the go command works, it either creates build cache files or touches
+        # ones it uses at most once an hour. When it trims the cache, it trims
+        # files that have not been modified/touched in 5+ days.
+        # To keep our saved cache lean, trim all files except ones that were just
+        # created/touched as part of this run.
+        run: |
+          find ~/.cache/go-build -type f -mmin +90 -delete      
+    
+      - name: Set Go cache date
+        shell: bash
+        run: echo "GO_CACHE_DATE=$(date +%Y-%m-%d)" >> $GITHUB_ENV
+    
+      - name: Save Go cache
+        if: ${{ github.ref == 'refs/heads/main' }}
+        uses: actions/cache/save@v4
+        with:
+          # Caches both the downloaded modules and the compiled build cache.
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build        
+            ~/.cache/golangci-lint
+          # Save to eg Linux-go-$hash-YYYY-MM-DD to keep the cache fresh
+          key: "${{ runner.os }}-golang-${{ env.GO_CACHE_DATE }}"

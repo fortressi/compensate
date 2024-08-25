@@ -1,0 +1,12 @@
+{
+  "saga_id": "beans",
+  "saga_name": "AWSVPCInfra",
+  "status": "failed",
+  "context": {
+    "region": "eu-west-2",
+    "instance_type": ""
+  },
+  "completed_actions": [],
+  "created_at": "2025-06-29T22:08:54.703827+01:00",
+  "updated_at": "2025-06-29T22:08:54.776452+01:00"
+}

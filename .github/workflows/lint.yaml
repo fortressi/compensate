@@ -1,0 +1,63 @@
+name: Lint
+
+on: # yamllint disable-line rule:truthy
+  push: null
+
+permissions: {}
+
+jobs:
+  build:
+    name: Lint
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: read
+      # To report GitHub Actions status checks
+      statuses: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          # super-linter needs the full git history to get the
+          # list of files that changed across commits
+          fetch-depth: 0
+      - name: Restore Go cache
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build        
+          # always grab from the restore-keys pattern below,
+          # like Linux-go-$hash-YYYY-MM-DD as saved by CI
+          key: nonexistent
+          restore-keys: |
+            ${{ runner.os }}-golang-
+      - name: Restore Go cache
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            ~/.cache/golangci-lint
+          # always grab from the restore-keys pattern below,
+          # like Linux-go-$hash-YYYY-MM-DD as saved by CI
+          key: nonexistent
+          restore-keys: |
+            ${{ runner.os }}-golangcilint-
+
+      - name: Super-linter
+        uses: super-linter/super-linter/slim@v7.4.0 # x-release-please-version
+        env:
+          # Use the root of the directory for linter rules
+          LINTER_RULES_PATH: "."
+          # To report GitHub Actions status checks
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VALIDATE_GO_MODULES: true
+          GO_CONFIG_FILE: .golangci.yaml
+          # VALIDATE_TYPESCRIPT_PRETTIER: true
+          # VALIDATE_VUE_PRETTIER: true
+          # VALIDATE_JSON_PRETTIER: true
+          # VALIDATE_TERRAFORM_FMT: true
+          # VALIDATE_TERRAFORM_TFLINT: true
+          # VALIDATE_DOCKERFILE_HADOLINT: true
+          # VALIDATE_BASH: true
