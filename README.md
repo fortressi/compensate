@@ -1,6 +1,6 @@
 # Compensate
 
-A Go library implementing the Distributed Saga pattern for managing complex, multi-step operations with automatic rollback capabilities. Inspired by [Caitie McCaffrey's saga pattern presentation](https://www.youtube.com/watch?v=xDuwrtwYHu8).
+A Go library implementing the Distributed Saga pattern for managing complex, multi-step operations with automatic rollback capabilities. Inspired by oxidecomputer/steno, which was in turn inspired by [Caitie McCaffrey's saga pattern presentation](https://www.youtube.com/watch?v=xDuwrtwYHu8).
 
 ## Features
 
