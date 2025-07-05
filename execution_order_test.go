@@ -49,9 +49,9 @@ func TestExecutionOrderRespectsDependencies(t *testing.T) {
 	
 	actionA := NewActionFunc[*SimpleState, *SimpleSaga, string](
 		"action_a",
-		func(ctx context.Context, sgctx ActionContext[*SimpleState, *SimpleSaga]) (ActionFuncResult[string], error) {
+		func(ctx context.Context, sgctx ActionContext[*SimpleState, *SimpleSaga]) (ActionResult[string], error) {
 			sgctx.UserContext.Values = append(sgctx.UserContext.Values, "A")
-			return ActionFuncResult[string]{Output: "result_a"}, nil
+			return ActionResult[string]{Output: "result_a"}, nil
 		},
 		func(ctx context.Context, sgctx ActionContext[*SimpleState, *SimpleSaga]) error {
 			return nil
@@ -60,18 +60,18 @@ func TestExecutionOrderRespectsDependencies(t *testing.T) {
 	
 	actionB := NewActionFunc[*SimpleState, *SimpleSaga, string](
 		"action_b", 
-		func(ctx context.Context, sgctx ActionContext[*SimpleState, *SimpleSaga]) (ActionFuncResult[string], error) {
+		func(ctx context.Context, sgctx ActionContext[*SimpleState, *SimpleSaga]) (ActionResult[string], error) {
 			// B depends on A - verify A executed first
 			resultA, found := LookupTyped[string](sgctx, "nodeA")
 			if !found {
-				return ActionFuncResult[string]{}, fmt.Errorf("action B requires action A to run first")
+				return ActionResult[string]{}, fmt.Errorf("action B requires action A to run first")
 			}
 			if resultA != "result_a" {
-				return ActionFuncResult[string]{}, fmt.Errorf("action B got unexpected result from A: %s", resultA)
+				return ActionResult[string]{}, fmt.Errorf("action B got unexpected result from A: %s", resultA)
 			}
 			
 			sgctx.UserContext.Values = append(sgctx.UserContext.Values, "B")
-			return ActionFuncResult[string]{Output: "result_b"}, nil
+			return ActionResult[string]{Output: "result_b"}, nil
 		},
 		func(ctx context.Context, sgctx ActionContext[*SimpleState, *SimpleSaga]) error {
 			return nil
@@ -80,18 +80,18 @@ func TestExecutionOrderRespectsDependencies(t *testing.T) {
 	
 	actionC := NewActionFunc[*SimpleState, *SimpleSaga, string](
 		"action_c",
-		func(ctx context.Context, sgctx ActionContext[*SimpleState, *SimpleSaga]) (ActionFuncResult[string], error) {
+		func(ctx context.Context, sgctx ActionContext[*SimpleState, *SimpleSaga]) (ActionResult[string], error) {
 			// C depends on B - verify B executed first  
 			resultB, found := LookupTyped[string](sgctx, "nodeB")
 			if !found {
-				return ActionFuncResult[string]{}, fmt.Errorf("action C requires action B to run first")
+				return ActionResult[string]{}, fmt.Errorf("action C requires action B to run first")
 			}
 			if resultB != "result_b" {
-				return ActionFuncResult[string]{}, fmt.Errorf("action C got unexpected result from B: %s", resultB)
+				return ActionResult[string]{}, fmt.Errorf("action C got unexpected result from B: %s", resultB)
 			}
 			
 			sgctx.UserContext.Values = append(sgctx.UserContext.Values, "C")
-			return ActionFuncResult[string]{Output: "result_c"}, nil
+			return ActionResult[string]{Output: "result_c"}, nil
 		},
 		func(ctx context.Context, sgctx ActionContext[*SimpleState, *SimpleSaga]) error {
 			return nil
@@ -178,9 +178,9 @@ func TestExecutionOrderValidatesCurrentImplementation(t *testing.T) {
 		actionIndex := i
 		action := NewActionFunc[*TestState, *TestSaga, int](
 			ActionName(actionName),
-			func(ctx context.Context, sgctx ActionContext[*TestState, *TestSaga]) (ActionFuncResult[int], error) {
+			func(ctx context.Context, sgctx ActionContext[*TestState, *TestSaga]) (ActionResult[int], error) {
 				sgctx.UserContext.Counter += actionIndex + 1
-				return ActionFuncResult[int]{Output: actionIndex}, nil
+				return ActionResult[int]{Output: actionIndex}, nil
 			},
 			func(ctx context.Context, sgctx ActionContext[*TestState, *TestSaga]) error {
 				return nil
