@@ -14,8 +14,8 @@ func TestDagBuilder(t *testing.T) {
 	// Create test actions
 	action1 := NewActionFunc[*NewTestState, *NewTestSaga, *SimpleResult](
 		"action1",
-		func(ctx context.Context, sgctx ActionContext[*NewTestState, *NewTestSaga]) (ActionFuncResult[*SimpleResult], error) {
-			return ActionFuncResult[*SimpleResult]{Output: &SimpleResult{Value: "action1"}}, nil
+		func(ctx context.Context, sgctx ActionContext[*NewTestState, *NewTestSaga]) (ActionResult[*SimpleResult], error) {
+			return ActionResult[*SimpleResult]{Output: &SimpleResult{Value: "action1"}}, nil
 		},
 		func(ctx context.Context, sgctx ActionContext[*NewTestState, *NewTestSaga]) error {
 			return nil
@@ -24,8 +24,8 @@ func TestDagBuilder(t *testing.T) {
 
 	action2 := NewActionFunc[*NewTestState, *NewTestSaga, *SimpleResult](
 		"action2",
-		func(ctx context.Context, sgctx ActionContext[*NewTestState, *NewTestSaga]) (ActionFuncResult[*SimpleResult], error) {
-			return ActionFuncResult[*SimpleResult]{Output: &SimpleResult{Value: "action2"}}, nil
+		func(ctx context.Context, sgctx ActionContext[*NewTestState, *NewTestSaga]) (ActionResult[*SimpleResult], error) {
+			return ActionResult[*SimpleResult]{Output: &SimpleResult{Value: "action2"}}, nil
 		},
 		func(ctx context.Context, sgctx ActionContext[*NewTestState, *NewTestSaga]) error {
 			return nil
@@ -34,8 +34,8 @@ func TestDagBuilder(t *testing.T) {
 
 	action3 := NewActionFunc[*NewTestState, *NewTestSaga, *SimpleResult](
 		"action3",
-		func(ctx context.Context, sgctx ActionContext[*NewTestState, *NewTestSaga]) (ActionFuncResult[*SimpleResult], error) {
-			return ActionFuncResult[*SimpleResult]{Output: &SimpleResult{Value: "action3"}}, nil
+		func(ctx context.Context, sgctx ActionContext[*NewTestState, *NewTestSaga]) (ActionResult[*SimpleResult], error) {
+			return ActionResult[*SimpleResult]{Output: &SimpleResult{Value: "action3"}}, nil
 		},
 		func(ctx context.Context, sgctx ActionContext[*NewTestState, *NewTestSaga]) error {
 			return nil
@@ -44,8 +44,8 @@ func TestDagBuilder(t *testing.T) {
 
 	action6 := NewActionFunc[*NewTestState, *NewTestSaga, *SimpleResult](
 		"action6",
-		func(ctx context.Context, sgctx ActionContext[*NewTestState, *NewTestSaga]) (ActionFuncResult[*SimpleResult], error) {
-			return ActionFuncResult[*SimpleResult]{Output: &SimpleResult{Value: "action6"}}, nil
+		func(ctx context.Context, sgctx ActionContext[*NewTestState, *NewTestSaga]) (ActionResult[*SimpleResult], error) {
+			return ActionResult[*SimpleResult]{Output: &SimpleResult{Value: "action6"}}, nil
 		},
 		func(ctx context.Context, sgctx ActionContext[*NewTestState, *NewTestSaga]) error {
 			return nil

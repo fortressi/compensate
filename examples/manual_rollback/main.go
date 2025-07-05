@@ -46,7 +46,7 @@ func main() {
 	databaseAction := compensate.NewActionFunc[*SimpleState, *SimpleSaga, *ResourceResult](
 		"create_database",
 		// DoIt - creates a database
-		func(ctx context.Context, sagaCtx compensate.ActionContext[*SimpleState, *SimpleSaga]) (compensate.ActionFuncResult[*ResourceResult], error) {
+		func(ctx context.Context, sagaCtx compensate.ActionContext[*SimpleState, *SimpleSaga]) (compensate.ActionResult[*ResourceResult], error) {
 			log.Println("📦 Creating database...")
 			time.Sleep(1 * time.Second) // Simulate work
 
@@ -59,7 +59,7 @@ func main() {
 			sagaCtx.UserContext.Resources = append(sagaCtx.UserContext.Resources, result.ResourceID)
 
 			log.Printf("✅ Database created: %s", result.ResourceID)
-			return compensate.ActionFuncResult[*ResourceResult]{Output: result}, nil
+			return compensate.ActionResult[*ResourceResult]{Output: result}, nil
 		},
 		// UndoIt - deletes the database
 		func(ctx context.Context, sagaCtx compensate.ActionContext[*SimpleState, *SimpleSaga]) error {
@@ -88,7 +88,7 @@ func main() {
 	cacheAction := compensate.NewActionFunc[*SimpleState, *SimpleSaga, *ResourceResult](
 		"create_cache",
 		// DoIt - creates a cache instance
-		func(ctx context.Context, sagaCtx compensate.ActionContext[*SimpleState, *SimpleSaga]) (compensate.ActionFuncResult[*ResourceResult], error) {
+		func(ctx context.Context, sagaCtx compensate.ActionContext[*SimpleState, *SimpleSaga]) (compensate.ActionResult[*ResourceResult], error) {
 			log.Println("💾 Creating cache instance...")
 			time.Sleep(1 * time.Second)
 
@@ -100,7 +100,7 @@ func main() {
 			sagaCtx.UserContext.Resources = append(sagaCtx.UserContext.Resources, result.ResourceID)
 
 			log.Printf("✅ Cache created: %s", result.ResourceID)
-			return compensate.ActionFuncResult[*ResourceResult]{Output: result}, nil
+			return compensate.ActionResult[*ResourceResult]{Output: result}, nil
 		},
 		// UndoIt - deletes the cache
 		func(ctx context.Context, sagaCtx compensate.ActionContext[*SimpleState, *SimpleSaga]) error {
@@ -129,13 +129,13 @@ func main() {
 	appServerAction := compensate.NewActionFunc[*SimpleState, *SimpleSaga, *ResourceResult](
 		"create_app_server",
 		// DoIt - creates application server
-		func(ctx context.Context, sagaCtx compensate.ActionContext[*SimpleState, *SimpleSaga]) (compensate.ActionFuncResult[*ResourceResult], error) {
+		func(ctx context.Context, sagaCtx compensate.ActionContext[*SimpleState, *SimpleSaga]) (compensate.ActionResult[*ResourceResult], error) {
 			// Check dependencies exist
 			_, dbFound := compensate.LookupTyped[*ResourceResult](sagaCtx, "create_database")
 			_, cacheFound := compensate.LookupTyped[*ResourceResult](sagaCtx, "create_cache")
 
 			if !dbFound || !cacheFound {
-				return compensate.ActionFuncResult[*ResourceResult]{}, fmt.Errorf("dependencies not found")
+				return compensate.ActionResult[*ResourceResult]{}, fmt.Errorf("dependencies not found")
 			}
 
 			log.Println("🖥️  Creating application server...")
@@ -149,7 +149,7 @@ func main() {
 			sagaCtx.UserContext.Resources = append(sagaCtx.UserContext.Resources, result.ResourceID)
 
 			log.Printf("✅ App server created: %s", result.ResourceID)
-			return compensate.ActionFuncResult[*ResourceResult]{Output: result}, nil
+			return compensate.ActionResult[*ResourceResult]{Output: result}, nil
 		},
 		// UndoIt - shuts down app server
 		func(ctx context.Context, sagaCtx compensate.ActionContext[*SimpleState, *SimpleSaga]) error {

@@ -48,7 +48,7 @@ type ExecutionNode struct {
 	NodeIndex int64
 	NodeName  NodeName
 	State     ActionState
-	Output    ActionData
+	Result    *ActionResult[ActionData] // Full result including timing, warnings, metrics
 	Error     error
 }
 
@@ -125,7 +125,7 @@ func (e *SagaExecutor[T, S]) initializeNodes() {
 			NodeIndex: nodeIndex,
 			NodeName:  NodeName(nodeName),
 			State:     ActionStatePending,
-			Output:    nil,
+			Result:    nil,
 			Error:     nil,
 		}
 	}
@@ -217,6 +217,10 @@ func (e *SagaExecutor[T, S]) executeNode(ctx context.Context, nodeIndex int64) e
 	result, err := action.DoIt(ctx, actionCtx)
 	endTime := time.Now()
 	
+	// SEC always sets the timing, overwriting any values from action
+	result.StartTime = startTime
+	result.EndTime = endTime
+	
 	// Determine final status and handle result
 	var finalStatus ActionState
 	if err != nil {
@@ -224,12 +228,12 @@ func (e *SagaExecutor[T, S]) executeNode(ctx context.Context, nodeIndex int64) e
 		execNode.Error = err
 		finalStatus = ActionStateFailed
 	} else {
-		// Store the result
+		// Store the full result
 		execNode.State = ActionStateCompleted
-		execNode.Output = result.Output
+		execNode.Result = &result
 		finalStatus = ActionStateCompleted
 		
-		// Add to ancestor tree for dependent actions
+		// Add output to ancestor tree for dependent actions
 		if execNode.NodeName != "" {
 			e.ancestorTree.Set(execNode.NodeName, result.Output)
 		}
@@ -492,10 +496,21 @@ func (e *SagaExecutor[T, S]) persistState(ctx context.Context, status string) er
 			output = data
 		}
 		
-		completedActions = append(completedActions, CompletedAction{
+		// Build completed action with full result data
+		ca := CompletedAction{
 			Name:   string(node.NodeName),
 			Output: output,
-		})
+		}
+		
+		// Add timing and metadata if we have the full result
+		if node.Result != nil {
+			ca.StartTime = node.Result.StartTime
+			ca.EndTime = node.Result.EndTime
+			ca.Warnings = node.Result.Warnings
+			ca.Metrics = node.Result.Metrics
+		}
+		
+		completedActions = append(completedActions, ca)
 	}
 	
 	// Create state

@@ -25,8 +25,8 @@ func TestSagaDagConstruction(t *testing.T) {
 	// Create action
 	action1 := NewActionFunc[*NewTestState, *NewTestSaga, *SimpleResult](
 		"action1",
-		func(ctx context.Context, sgctx ActionContext[*NewTestState, *NewTestSaga]) (ActionFuncResult[*SimpleResult], error) {
-			return ActionFuncResult[*SimpleResult]{Output: &SimpleResult{Value: "action1"}}, nil
+		func(ctx context.Context, sgctx ActionContext[*NewTestState, *NewTestSaga]) (ActionResult[*SimpleResult], error) {
+			return ActionResult[*SimpleResult]{Output: &SimpleResult{Value: "action1"}}, nil
 		},
 		func(ctx context.Context, sgctx ActionContext[*NewTestState, *NewTestSaga]) error {
 			return nil

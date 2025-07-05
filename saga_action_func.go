@@ -6,16 +6,11 @@ import (
 	"fmt"
 )
 
-// ActionFuncResult represents the result of a function that implements a saga action.
-type ActionFuncResult[T ActionData] struct {
-	Output T
-}
-
 // ActionFn is a generic function type for saga actions.
 // NOTE(morganj): Do we need a context.Context here...
 // type ActionFn[T any, S SagaType[T], R any] func(ctx context.Context, sgctx ActionContext[T, S]) (R, error)
 
-type DoItFunc[T any, S SagaType[T], R ActionData] func(ctx context.Context, sgctx ActionContext[T, S]) (ActionFuncResult[R], error)
+type DoItFunc[T any, S SagaType[T], R ActionData] func(ctx context.Context, sgctx ActionContext[T, S]) (ActionResult[R], error)
 type UndoItFunc[T any, S SagaType[T]] func(ctx context.Context, sgctx ActionContext[T, S]) error
 
 // ActionFunc is an implementation of Action that uses ordinary functions.
@@ -50,13 +45,19 @@ func (af *ActionFunc[T, S, R]) DoIt(ctx context.Context, sgctx ActionContext[T, 
 		return ActionResult[ActionData]{}, err
 	}
 
-	// Serialize the result
+	// Validate that the output can be serialized
 	_, err = json.Marshal(result.Output)
 	if err != nil {
 		return ActionResult[ActionData]{}, ActionFailed(NewSerializeError(err))
 	}
 
-	return ActionResult[ActionData]{Output: result.Output}, nil
+	// Convert to ActionResult[ActionData] preserving all fields except timing
+	// (SEC will set timing after this returns)
+	return ActionResult[ActionData]{
+		Output:   result.Output,
+		Warnings: result.Warnings,
+		Metrics:  result.Metrics,
+	}, nil
 }
 
 // UndoIt implements the Action interface for ActionFunc.
