@@ -4,10 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"runtime"
 	"sort"
+	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/tidwall/btree"
+	"golang.org/x/sync/errgroup"
 	"gonum.org/v1/gonum/graph"
 	"gonum.org/v1/gonum/graph/topo"
 )
@@ -81,6 +85,13 @@ type SagaExecutor[T any, S SagaType[T]] struct {
 	store    Store[T]
 	sagaID   string
 	startedAt time.Time
+	
+	// Logging
+	logger Logger
+	
+	// Concurrency control
+	maxConcurrency int
+	mu             sync.Mutex  // Protects shared state
 }
 
 
@@ -104,12 +115,90 @@ func NewSagaExecutor[T any, S SagaType[T]](
 		failed:         make([]int64, 0),
 		executionTrace: make([]ExecutionRecord, 0),
 		startedAt:      time.Now(),
+		logger:         NopLogger(), // Default to no logging for backward compatibility
+		maxConcurrency: runtime.NumCPU(),
 	}
 	
 	// Initialize execution nodes
 	executor.initializeNodes()
 	
 	return executor
+}
+
+// Thread-safe state update methods
+
+// addCompleted safely adds a node to the completed list
+func (e *SagaExecutor[T, S]) addCompleted(nodeIndex int64) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	e.completed = append(e.completed, nodeIndex)
+}
+
+// addFailed safely adds a node to the failed list
+func (e *SagaExecutor[T, S]) addFailed(nodeIndex int64) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	e.failed = append(e.failed, nodeIndex)
+}
+
+// updateAncestorTree safely updates the ancestor tree
+func (e *SagaExecutor[T, S]) updateAncestorTree(nodeName NodeName, value any) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	e.ancestorTree.Set(nodeName, value)
+}
+
+// addExecutionRecord safely adds an execution record
+func (e *SagaExecutor[T, S]) addExecutionRecord(record ExecutionRecord) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	e.executionTrace = append(e.executionTrace, record)
+}
+
+// createAncestorSnapshot creates a read-only snapshot of the ancestor tree
+func (e *SagaExecutor[T, S]) createAncestorSnapshot() *btree.Map[NodeName, any] {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	
+	snapshot := btree.NewMap[NodeName, any](10)
+	e.ancestorTree.Scan(func(key NodeName, value any) bool {
+		snapshot.Set(key, value)
+		return true
+	})
+	return snapshot
+}
+
+// calculateParallelismPotential calculates the potential parallelism in the execution plan
+func (e *SagaExecutor[T, S]) calculateParallelismPotential(levels [][]int64) int {
+	maxParallel := 0
+	for _, level := range levels {
+		if len(level) > maxParallel {
+			maxParallel = len(level)
+		}
+	}
+	return maxParallel
+}
+
+// WithLogger sets the logger for the executor
+func (e *SagaExecutor[T, S]) WithLogger(logger Logger) *SagaExecutor[T, S] {
+	e.logger = logger.With(
+		"saga_id", e.sagaID,
+		"saga_name", e.dag.SagaName,
+	)
+	return e
+}
+
+// EnableDefaultLogging enables logging with slog.Default()
+func (e *SagaExecutor[T, S]) EnableDefaultLogging() *SagaExecutor[T, S] {
+	return e.WithLogger(DefaultLogger())
+}
+
+// SetMaxConcurrency allows configuration of concurrency limit
+func (e *SagaExecutor[T, S]) SetMaxConcurrency(max int) {
+	if max < 1 {
+		max = 1
+	}
+	e.maxConcurrency = max
 }
 
 
@@ -148,12 +237,12 @@ func (e *SagaExecutor[T, S]) Execute(ctx context.Context) error {
 	for _, nodeIndex := range executionOrder {
 		if err := e.executeNode(ctx, nodeIndex); err != nil {
 			// If execution fails, trigger compensation
-			e.failed = append(e.failed, nodeIndex)
+			// Note: executeNode already adds to failed list
 			
 			// Persist failure state
 			if persistErr := e.persistState(ctx, SagaStatusFailed); persistErr != nil {
 				// Log persistence error but don't fail the compensation
-				fmt.Printf("Warning: failed to persist failure state: %v\n", persistErr)
+				e.logger.Warn("failed to persist failure state", "error", persistErr)
 			}
 			
 			if compensationErr := e.compensate(ctx); compensationErr != nil {
@@ -161,21 +250,160 @@ func (e *SagaExecutor[T, S]) Execute(ctx context.Context) error {
 			}
 			return fmt.Errorf("saga failed at node %d: %w", nodeIndex, err)
 		}
-		e.completed = append(e.completed, nodeIndex)
+		// Note: executeNode already adds to completed list
 		
 		// Persist execution state after each node
 		if persistErr := e.persistState(ctx, SagaStatusRunning); persistErr != nil {
 			// Log persistence error but continue execution
-			fmt.Printf("Warning: failed to persist execution state: %v\n", persistErr)
+			e.logger.Warn("failed to persist execution state", "error", persistErr)
 		}
 	}
 	
 	// Mark saga as completed
 	if err := e.persistState(ctx, SagaStatusCompleted); err != nil {
-		fmt.Printf("Warning: failed to persist completion state: %v\n", err)
+		e.logger.Warn("failed to persist completion state", "error", err)
 	}
 	
 	return nil
+}
+
+// ExecuteConcurrent runs the saga with concurrent execution of parallel nodes
+func (e *SagaExecutor[T, S]) ExecuteConcurrent(ctx context.Context) error {
+	e.logger.Info("starting concurrent saga execution",
+		"total_nodes", len(e.dag.Nodes),
+		"max_concurrency", e.maxConcurrency,
+	)
+	startTime := time.Now()
+	
+	// Save initial state
+	if err := e.persistState(ctx, SagaStatusRunning); err != nil {
+		e.logger.Error("failed to save initial state", "error", err)
+		return fmt.Errorf("failed to save initial state: %w", err)
+	}
+	
+	// Get execution levels
+	levels, err := e.getExecutionLevels()
+	if err != nil {
+		e.logger.Error("failed to get execution levels", "error", err)
+		return fmt.Errorf("failed to get execution levels: %w", err)
+	}
+	
+	e.logger.Debug("execution plan determined",
+		"levels", len(levels),
+		"parallelism_potential", e.calculateParallelismPotential(levels),
+	)
+	
+	// Execute each level
+	for levelIndex, level := range levels {
+		levelLogger := e.logger.With("level", levelIndex, "nodes", len(level))
+		levelLogger.Info("executing level")
+		
+		if err := e.executeLevel(ctx, level, levelLogger); err != nil {
+			levelLogger.Error("level execution failed", "error", err)
+			
+			// Persist failure state
+			if persistErr := e.persistState(ctx, SagaStatusFailed); persistErr != nil {
+				e.logger.Warn("failed to persist failure state", "error", persistErr)
+			}
+			
+			// Trigger compensation
+			compensationLogger := e.logger.WithGroup("compensation")
+			compensationLogger.Info("starting compensation")
+			
+			if compensationErr := e.compensate(ctx); compensationErr != nil {
+				compensationLogger.Error("compensation failed", "error", compensationErr)
+				return fmt.Errorf("level %d failed and compensation failed: execution_error=%w, compensation_error=%v", 
+					levelIndex, err, compensationErr)
+			}
+			
+			compensationLogger.Info("compensation completed successfully")
+			return fmt.Errorf("saga failed at level %d: %w", levelIndex, err)
+		}
+		
+		levelLogger.Info("level completed successfully")
+		
+		// Persist state after each level
+		if persistErr := e.persistState(ctx, SagaStatusRunning); persistErr != nil {
+			e.logger.Warn("failed to persist execution state", "error", persistErr)
+		}
+	}
+	
+	// Mark saga as completed
+	if err := e.persistState(ctx, SagaStatusCompleted); err != nil {
+		e.logger.Warn("failed to persist completion state", "error", err)
+	}
+	
+	duration := time.Since(startTime)
+	e.logger.Info("saga execution completed",
+		"duration_ms", duration.Milliseconds(),
+		"status", "success",
+	)
+	
+	return nil
+}
+
+// executeLevel executes all nodes in a level concurrently
+func (e *SagaExecutor[T, S]) executeLevel(ctx context.Context, nodeIndices []int64, levelLogger Logger) error {
+	if len(nodeIndices) == 0 {
+		return nil
+	}
+	
+	levelLogger.Debug("starting concurrent execution", 
+		"parallelism", min(len(nodeIndices), e.maxConcurrency))
+	
+	// Create context with cancellation for this level
+	levelCtx, cancel := context.WithCancel(ctx)
+	defer cancel()
+	
+	// Use errgroup for cleaner goroutine management
+	g, gctx := errgroup.WithContext(levelCtx)
+	g.SetLimit(e.maxConcurrency)
+	
+	// Atomic counter for active goroutines (for debugging)
+	var activeGoroutines int32
+	
+	for _, nodeIndex := range nodeIndices {
+		nodeIndex := nodeIndex // capture loop variable
+		
+		g.Go(func() error {
+			goroutineID := atomic.AddInt32(&activeGoroutines, 1)
+			goroutineLogger := levelLogger.With("goroutine", goroutineID)
+			defer atomic.AddInt32(&activeGoroutines, -1)
+			
+			goroutineLogger.Debug("goroutine started", "node_id", nodeIndex)
+			
+			err := e.executeNodeConcurrent(gctx, nodeIndex, goroutineLogger)
+			
+			if err != nil {
+				goroutineLogger.Error("goroutine failed", "error", err)
+				return err
+			}
+			
+			goroutineLogger.Debug("goroutine completed")
+			return nil
+		})
+	}
+	
+	// Wait for all goroutines
+	err := g.Wait()
+	
+	if err != nil {
+		levelLogger.Error("level execution failed", 
+			"error", err,
+			"active_goroutines", atomic.LoadInt32(&activeGoroutines))
+		return err
+	}
+	
+	levelLogger.Debug("all goroutines completed successfully")
+	return nil
+}
+
+// min returns the minimum of two integers
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
 }
 
 // executeNode executes a single node
@@ -191,6 +419,7 @@ func (e *SagaExecutor[T, S]) executeNode(ctx context.Context, nodeIndex int64) e
 	if !ok {
 		// Skip non-action nodes (like StartNode, EndNode)
 		execNode.State = ActionStateCompleted
+		e.addCompleted(nodeIndex)
 		return nil
 	}
 	
@@ -227,15 +456,17 @@ func (e *SagaExecutor[T, S]) executeNode(ctx context.Context, nodeIndex int64) e
 		execNode.State = ActionStateFailed
 		execNode.Error = err
 		finalStatus = ActionStateFailed
+		e.addFailed(nodeIndex)
 	} else {
 		// Store the full result
 		execNode.State = ActionStateCompleted
 		execNode.Result = &result
 		finalStatus = ActionStateCompleted
+		e.addCompleted(nodeIndex)
 		
 		// Add output to ancestor tree for dependent actions
 		if execNode.NodeName != "" {
-			e.ancestorTree.Set(execNode.NodeName, result.Output)
+			e.updateAncestorTree(execNode.NodeName, result.Output)
 		}
 	}
 	
@@ -248,7 +479,114 @@ func (e *SagaExecutor[T, S]) executeNode(ctx context.Context, nodeIndex int64) e
 		Status:     finalStatus,
 		Error:      err,
 	}
-	e.executionTrace = append(e.executionTrace, record)
+	e.addExecutionRecord(record)
+	
+	if err != nil {
+		return fmt.Errorf("action %s failed: %w", actionNode.ActionName, err)
+	}
+	
+	return nil
+}
+
+// executeNodeConcurrent executes a single node (thread-safe version)
+func (e *SagaExecutor[T, S]) executeNodeConcurrent(ctx context.Context, nodeIndex int64, logger Logger) error {
+	execNode := e.nodes[nodeIndex]
+	internalNode := e.dag.Nodes[nodeIndex]
+	
+	nodeLogger := logger.With(
+		"node_id", nodeIndex,
+		"node_name", execNode.NodeName,
+	)
+	
+	// Update state to running
+	execNode.State = ActionStateRunning
+	nodeLogger.Debug("node execution started")
+	
+	// Only handle ActionNodeInternal for now
+	actionNode, ok := internalNode.(*ActionNodeInternal)
+	if !ok {
+		nodeLogger.Debug("skipping non-action node")
+		execNode.State = ActionStateCompleted
+		e.addCompleted(nodeIndex)
+		return nil
+	}
+	
+	actionLogger := nodeLogger.With("action_name", actionNode.ActionName)
+	
+	// Get action from registry
+	action, err := e.actionRegistry.Get(actionNode.ActionName)
+	if err != nil {
+		actionLogger.Error("action not found in registry", "error", err)
+		execNode.State = ActionStateFailed
+		execNode.Error = err
+		e.addFailed(nodeIndex)
+		return fmt.Errorf("action not found: %s", actionNode.ActionName)
+	}
+	
+	// Record start of execution
+	startTime := time.Now()
+	actionLogger.Debug("executing action")
+	
+	// Create action context with a snapshot of ancestor tree
+	// This ensures consistent view during concurrent execution
+	ancestorSnapshot := e.createAncestorSnapshot()
+	
+	actionCtx := ActionContext[T, S]{
+		AncestorTree: ancestorSnapshot,
+		NodeID:       int(nodeIndex),
+		DAG:          e.dag,
+		UserContext:  e.sagaContext.ExecContext(),
+	}
+	
+	// Execute the action
+	result, err := action.DoIt(ctx, actionCtx)
+	endTime := time.Now()
+	
+	// SEC always sets the timing
+	result.StartTime = startTime
+	result.EndTime = endTime
+	
+	duration := time.Since(startTime)
+	
+	// Determine final status and handle result
+	var finalStatus ActionState
+	if err != nil {
+		actionLogger.Error("action execution failed",
+			"error", err,
+			"duration_ms", duration.Milliseconds(),
+		)
+		execNode.State = ActionStateFailed
+		execNode.Error = err
+		finalStatus = ActionStateFailed
+		e.addFailed(nodeIndex)
+	} else {
+		actionLogger.Info("action executed successfully",
+			"duration_ms", duration.Milliseconds(),
+			"has_output", result.Output != nil,
+		)
+		
+		// Store the full result
+		execNode.State = ActionStateCompleted
+		execNode.Result = &result
+		finalStatus = ActionStateCompleted
+		e.addCompleted(nodeIndex)
+		
+		// Add output to ancestor tree for dependent actions
+		if execNode.NodeName != "" {
+			e.updateAncestorTree(execNode.NodeName, result.Output)
+		}
+	}
+	
+	// Record execution in trace
+	record := ExecutionRecord{
+		ActionName: string(actionNode.ActionName),
+		NodeID:     nodeIndex,
+		StartTime:  startTime,
+		EndTime:    endTime,
+		Status:     finalStatus,
+		Error:      err,
+	}
+	e.addExecutionRecord(record)
 	
 	if err != nil {
 		return fmt.Errorf("action %s failed: %w", actionNode.ActionName, err)
@@ -455,7 +793,7 @@ func (e *SagaExecutor[T, S]) Rollback(ctx context.Context) error {
 	
 	// Update status to rolling back
 	if err := e.persistState(ctx, SagaStatusRollingBack); err != nil {
-		fmt.Printf("Warning: failed to persist rollback state: %v\n", err)
+		e.logger.Warn("failed to persist rollback state", "error", err)
 	}
 	
 	// Trigger compensation to undo all completed actions
@@ -467,7 +805,7 @@ func (e *SagaExecutor[T, S]) Rollback(ctx context.Context) error {
 		finalStatus = SagaStatusFailed
 	}
 	if persistErr := e.persistState(ctx, finalStatus); persistErr != nil {
-		fmt.Printf("Warning: failed to persist final rollback state: %v\n", persistErr)
+		e.logger.Warn("failed to persist final rollback state", "error", persistErr)
 	}
 	
 	return err
@@ -558,7 +896,7 @@ func NewExecutorFromState[T any, S SagaType[T]](
 		nodeID, err := dag.GetNodeIndex(completedAction.Name)
 		if err != nil {
 			// Log warning but continue
-			fmt.Printf("Warning: completed action %s not found in DAG\n", completedAction.Name)
+			// Note: NewExecutorFromState doesn't have a logger yet, so we skip logging here
 			continue
 		}
 		

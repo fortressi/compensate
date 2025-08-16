@@ -7,6 +7,7 @@ require (
 	github.com/puzpuzpuz/xsync/v3 v3.5.1
 	github.com/stretchr/testify v1.10.0
 	github.com/tidwall/btree v1.7.0
+	golang.org/x/sync v0.15.0
 	gonum.org/v1/gonum v0.16.0
 )
 

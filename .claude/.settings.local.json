@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(go test:*)",
+      "WebFetch(domain:github.com)",
+      "Bash(rg:*)",
+      "Bash(find:*)",
+      "Bash(grep:*)",
+      "Bash(go build:*)",
+      "Bash(go mod:*)",
+      "Bash(go fmt:*)",
+      "Bash(go vet:*)",
+      "Bash(go doc:*)",
+      "Bash(go run:*)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "mcp__git__git_status",
+      "mcp__language-server__diagnostics"
+    ],
+    "deny": []
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "language-server"
+  ]
+}
