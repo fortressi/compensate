@@ -19,8 +19,8 @@ func TestAppendParallelVariadic(t *testing.T) {
 	// Create test actions
 	validateAction := NewActionFunc[*NewTestState, *NewTestSaga, *SimpleResult](
 		"validate_action",
-		func(ctx context.Context, sgctx ActionContext[*NewTestState, *NewTestSaga]) (ActionFuncResult[*SimpleResult], error) {
-			return ActionFuncResult[*SimpleResult]{Output: &SimpleResult{Value: "validated"}}, nil
+		func(ctx context.Context, sgctx ActionContext[*NewTestState, *NewTestSaga]) (ActionResult[*SimpleResult], error) {
+			return ActionResult[*SimpleResult]{Output: &SimpleResult{Value: "validated"}}, nil
 		},
 		func(ctx context.Context, sgctx ActionContext[*NewTestState, *NewTestSaga]) error {
 			return nil
@@ -29,8 +29,8 @@ func TestAppendParallelVariadic(t *testing.T) {
 
 	paymentAction := NewActionFunc[*NewTestState, *NewTestSaga, *SimpleResult](
 		"payment_action",
-		func(ctx context.Context, sgctx ActionContext[*NewTestState, *NewTestSaga]) (ActionFuncResult[*SimpleResult], error) {
-			return ActionFuncResult[*SimpleResult]{Output: &SimpleResult{Value: "paid"}}, nil
+		func(ctx context.Context, sgctx ActionContext[*NewTestState, *NewTestSaga]) (ActionResult[*SimpleResult], error) {
+			return ActionResult[*SimpleResult]{Output: &SimpleResult{Value: "paid"}}, nil
 		},
 		func(ctx context.Context, sgctx ActionContext[*NewTestState, *NewTestSaga]) error {
 			return nil
@@ -39,8 +39,8 @@ func TestAppendParallelVariadic(t *testing.T) {
 
 	inventoryAction := NewActionFunc[*NewTestState, *NewTestSaga, *SimpleResult](
 		"inventory_action",
-		func(ctx context.Context, sgctx ActionContext[*NewTestState, *NewTestSaga]) (ActionFuncResult[*SimpleResult], error) {
-			return ActionFuncResult[*SimpleResult]{Output: &SimpleResult{Value: "reserved"}}, nil
+		func(ctx context.Context, sgctx ActionContext[*NewTestState, *NewTestSaga]) (ActionResult[*SimpleResult], error) {
+			return ActionResult[*SimpleResult]{Output: &SimpleResult{Value: "reserved"}}, nil
 		},
 		func(ctx context.Context, sgctx ActionContext[*NewTestState, *NewTestSaga]) error {
 			return nil
@@ -49,8 +49,8 @@ func TestAppendParallelVariadic(t *testing.T) {
 
 	confirmAction := NewActionFunc[*NewTestState, *NewTestSaga, *SimpleResult](
 		"confirm_action",
-		func(ctx context.Context, sgctx ActionContext[*NewTestState, *NewTestSaga]) (ActionFuncResult[*SimpleResult], error) {
-			return ActionFuncResult[*SimpleResult]{Output: &SimpleResult{Value: "confirmed"}}, nil
+		func(ctx context.Context, sgctx ActionContext[*NewTestState, *NewTestSaga]) (ActionResult[*SimpleResult], error) {
+			return ActionResult[*SimpleResult]{Output: &SimpleResult{Value: "confirmed"}}, nil
 		},
 		func(ctx context.Context, sgctx ActionContext[*NewTestState, *NewTestSaga]) error {
 			return nil
@@ -147,8 +147,8 @@ func TestAppendParallelThreeWay(t *testing.T) {
 	// Create test actions
 	setupAction := NewActionFunc[*NewTestState, *NewTestSaga, *SimpleResult](
 		"setup_action",
-		func(ctx context.Context, sgctx ActionContext[*NewTestState, *NewTestSaga]) (ActionFuncResult[*SimpleResult], error) {
-			return ActionFuncResult[*SimpleResult]{Output: &SimpleResult{Value: "setup"}}, nil
+		func(ctx context.Context, sgctx ActionContext[*NewTestState, *NewTestSaga]) (ActionResult[*SimpleResult], error) {
+			return ActionResult[*SimpleResult]{Output: &SimpleResult{Value: "setup"}}, nil
 		},
 		func(ctx context.Context, sgctx ActionContext[*NewTestState, *NewTestSaga]) error {
 			return nil
@@ -157,8 +157,8 @@ func TestAppendParallelThreeWay(t *testing.T) {
 
 	actionA := NewActionFunc[*NewTestState, *NewTestSaga, *SimpleResult](
 		"action_a",
-		func(ctx context.Context, sgctx ActionContext[*NewTestState, *NewTestSaga]) (ActionFuncResult[*SimpleResult], error) {
-			return ActionFuncResult[*SimpleResult]{Output: &SimpleResult{Value: "a"}}, nil
+		func(ctx context.Context, sgctx ActionContext[*NewTestState, *NewTestSaga]) (ActionResult[*SimpleResult], error) {
+			return ActionResult[*SimpleResult]{Output: &SimpleResult{Value: "a"}}, nil
 		},
 		func(ctx context.Context, sgctx ActionContext[*NewTestState, *NewTestSaga]) error {
 			return nil
@@ -167,8 +167,8 @@ func TestAppendParallelThreeWay(t *testing.T) {
 
 	actionB := NewActionFunc[*NewTestState, *NewTestSaga, *SimpleResult](
 		"action_b",
-		func(ctx context.Context, sgctx ActionContext[*NewTestState, *NewTestSaga]) (ActionFuncResult[*SimpleResult], error) {
-			return ActionFuncResult[*SimpleResult]{Output: &SimpleResult{Value: "b"}}, nil
+		func(ctx context.Context, sgctx ActionContext[*NewTestState, *NewTestSaga]) (ActionResult[*SimpleResult], error) {
+			return ActionResult[*SimpleResult]{Output: &SimpleResult{Value: "b"}}, nil
 		},
 		func(ctx context.Context, sgctx ActionContext[*NewTestState, *NewTestSaga]) error {
 			return nil
@@ -177,8 +177,8 @@ func TestAppendParallelThreeWay(t *testing.T) {
 
 	actionC := NewActionFunc[*NewTestState, *NewTestSaga, *SimpleResult](
 		"action_c",
-		func(ctx context.Context, sgctx ActionContext[*NewTestState, *NewTestSaga]) (ActionFuncResult[*SimpleResult], error) {
-			return ActionFuncResult[*SimpleResult]{Output: &SimpleResult{Value: "c"}}, nil
+		func(ctx context.Context, sgctx ActionContext[*NewTestState, *NewTestSaga]) (ActionResult[*SimpleResult], error) {
+			return ActionResult[*SimpleResult]{Output: &SimpleResult{Value: "c"}}, nil
 		},
 		func(ctx context.Context, sgctx ActionContext[*NewTestState, *NewTestSaga]) error {
 			return nil
@@ -187,8 +187,8 @@ func TestAppendParallelThreeWay(t *testing.T) {
 
 	cleanupAction := NewActionFunc[*NewTestState, *NewTestSaga, *SimpleResult](
 		"cleanup_action",
-		func(ctx context.Context, sgctx ActionContext[*NewTestState, *NewTestSaga]) (ActionFuncResult[*SimpleResult], error) {
-			return ActionFuncResult[*SimpleResult]{Output: &SimpleResult{Value: "cleanup"}}, nil
+		func(ctx context.Context, sgctx ActionContext[*NewTestState, *NewTestSaga]) (ActionResult[*SimpleResult], error) {
+			return ActionResult[*SimpleResult]{Output: &SimpleResult{Value: "cleanup"}}, nil
 		},
 		func(ctx context.Context, sgctx ActionContext[*NewTestState, *NewTestSaga]) error {
 			return nil
@@ -291,8 +291,8 @@ func TestAppendParallelDuplicateNames(t *testing.T) {
 
 	action1 := NewActionFunc[*NewTestState, *NewTestSaga, *SimpleResult](
 		"action1",
-		func(ctx context.Context, sgctx ActionContext[*NewTestState, *NewTestSaga]) (ActionFuncResult[*SimpleResult], error) {
-			return ActionFuncResult[*SimpleResult]{Output: &SimpleResult{Value: "action1"}}, nil
+		func(ctx context.Context, sgctx ActionContext[*NewTestState, *NewTestSaga]) (ActionResult[*SimpleResult], error) {
+			return ActionResult[*SimpleResult]{Output: &SimpleResult{Value: "action1"}}, nil
 		},
 		func(ctx context.Context, sgctx ActionContext[*NewTestState, *NewTestSaga]) error {
 			return nil
@@ -301,8 +301,8 @@ func TestAppendParallelDuplicateNames(t *testing.T) {
 
 	action2 := NewActionFunc[*NewTestState, *NewTestSaga, *SimpleResult](
 		"action2",
-		func(ctx context.Context, sgctx ActionContext[*NewTestState, *NewTestSaga]) (ActionFuncResult[*SimpleResult], error) {
-			return ActionFuncResult[*SimpleResult]{Output: &SimpleResult{Value: "action2"}}, nil
+		func(ctx context.Context, sgctx ActionContext[*NewTestState, *NewTestSaga]) (ActionResult[*SimpleResult], error) {
+			return ActionResult[*SimpleResult]{Output: &SimpleResult{Value: "action2"}}, nil
 		},
 		func(ctx context.Context, sgctx ActionContext[*NewTestState, *NewTestSaga]) error {
 			return nil

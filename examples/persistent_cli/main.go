@@ -126,12 +126,12 @@ func runDeploy(stateDir, sagaID string) error {
 	// Create mock actions
 	createDatabaseAction := compensate.NewActionFunc[*ResourceState, *ResourceSaga, string](
 		"create_database",
-		func(ctx context.Context, sgctx compensate.ActionContext[*ResourceState, *ResourceSaga]) (compensate.ActionFuncResult[string], error) {
+		func(ctx context.Context, sgctx compensate.ActionContext[*ResourceState, *ResourceSaga]) (compensate.ActionResult[string], error) {
 			dbID := fmt.Sprintf("db-%s", uuid.New().String()[:8])
 			sgctx.UserContext.Resources["database"] = dbID
 			log.Printf("📀 Created database: %s", dbID)
 			time.Sleep(500 * time.Millisecond) // Simulate work
-			return compensate.ActionFuncResult[string]{Output: dbID}, nil
+			return compensate.ActionResult[string]{Output: dbID}, nil
 		},
 		func(ctx context.Context, sgctx compensate.ActionContext[*ResourceState, *ResourceSaga]) error {
 			if dbID, ok := sgctx.UserContext.Resources["database"]; ok {
@@ -145,12 +145,12 @@ func runDeploy(stateDir, sagaID string) error {
 
 	createServerAction := compensate.NewActionFunc[*ResourceState, *ResourceSaga, string](
 		"create_server",
-		func(ctx context.Context, sgctx compensate.ActionContext[*ResourceState, *ResourceSaga]) (compensate.ActionFuncResult[string], error) {
+		func(ctx context.Context, sgctx compensate.ActionContext[*ResourceState, *ResourceSaga]) (compensate.ActionResult[string], error) {
 			serverID := fmt.Sprintf("server-%s", uuid.New().String()[:8])
 			sgctx.UserContext.Resources["server"] = serverID
 			log.Printf("🖥️  Created server: %s", serverID)
 			time.Sleep(1 * time.Second) // Simulate work
-			return compensate.ActionFuncResult[string]{Output: serverID}, nil
+			return compensate.ActionResult[string]{Output: serverID}, nil
 		},
 		func(ctx context.Context, sgctx compensate.ActionContext[*ResourceState, *ResourceSaga]) error {
 			if serverID, ok := sgctx.UserContext.Resources["server"]; ok {
@@ -164,12 +164,12 @@ func runDeploy(stateDir, sagaID string) error {
 
 	createLoadBalancerAction := compensate.NewActionFunc[*ResourceState, *ResourceSaga, string](
 		"create_loadbalancer",
-		func(ctx context.Context, sgctx compensate.ActionContext[*ResourceState, *ResourceSaga]) (compensate.ActionFuncResult[string], error) {
+		func(ctx context.Context, sgctx compensate.ActionContext[*ResourceState, *ResourceSaga]) (compensate.ActionResult[string], error) {
 			lbID := fmt.Sprintf("lb-%s", uuid.New().String()[:8])
 			sgctx.UserContext.Resources["loadbalancer"] = lbID
 			log.Printf("⚖️  Created load balancer: %s", lbID)
 			time.Sleep(700 * time.Millisecond) // Simulate work
-			return compensate.ActionFuncResult[string]{Output: lbID}, nil
+			return compensate.ActionResult[string]{Output: lbID}, nil
 		},
 		func(ctx context.Context, sgctx compensate.ActionContext[*ResourceState, *ResourceSaga]) error {
 			if lbID, ok := sgctx.UserContext.Resources["loadbalancer"]; ok {
@@ -297,9 +297,9 @@ func runDestroy(stateDir, sagaID string) error {
 	// Re-create the same actions (they need to match for undo)
 	createDatabaseAction := compensate.NewActionFunc[*ResourceState, *ResourceSaga, string](
 		"create_database",
-		func(ctx context.Context, sgctx compensate.ActionContext[*ResourceState, *ResourceSaga]) (compensate.ActionFuncResult[string], error) {
+		func(ctx context.Context, sgctx compensate.ActionContext[*ResourceState, *ResourceSaga]) (compensate.ActionResult[string], error) {
 			// Not used during destroy
-			return compensate.ActionFuncResult[string]{}, nil
+			return compensate.ActionResult[string]{}, nil
 		},
 		func(ctx context.Context, sgctx compensate.ActionContext[*ResourceState, *ResourceSaga]) error {
 			if dbID, ok := sgctx.UserContext.Resources["database"]; ok {
@@ -313,9 +313,9 @@ func runDestroy(stateDir, sagaID string) error {
 
 	createServerAction := compensate.NewActionFunc[*ResourceState, *ResourceSaga, string](
 		"create_server",
-		func(ctx context.Context, sgctx compensate.ActionContext[*ResourceState, *ResourceSaga]) (compensate.ActionFuncResult[string], error) {
+		func(ctx context.Context, sgctx compensate.ActionContext[*ResourceState, *ResourceSaga]) (compensate.ActionResult[string], error) {
 			// Not used during destroy
-			return compensate.ActionFuncResult[string]{}, nil
+			return compensate.ActionResult[string]{}, nil
 		},
 		func(ctx context.Context, sgctx compensate.ActionContext[*ResourceState, *ResourceSaga]) error {
 			if serverID, ok := sgctx.UserContext.Resources["server"]; ok {
@@ -329,9 +329,9 @@ func runDestroy(stateDir, sagaID string) error {
 
 	createLoadBalancerAction := compensate.NewActionFunc[*ResourceState, *ResourceSaga, string](
 		"create_loadbalancer",
-		func(ctx context.Context, sgctx compensate.ActionContext[*ResourceState, *ResourceSaga]) (compensate.ActionFuncResult[string], error) {
+		func(ctx context.Context, sgctx compensate.ActionContext[*ResourceState, *ResourceSaga]) (compensate.ActionResult[string], error) {
 			// Not used during destroy
-			return compensate.ActionFuncResult[string]{}, nil
+			return compensate.ActionResult[string]{}, nil
 		},
 		func(ctx context.Context, sgctx compensate.ActionContext[*ResourceState, *ResourceSaga]) error {
 			if lbID, ok := sgctx.UserContext.Resources["loadbalancer"]; ok {

@@ -31,8 +31,8 @@ func TestGetExecutionLevelsLinear(t *testing.T) {
 	// Create actions
 	actionA := NewActionFunc[*LevelTestState, *LevelTestSaga, *SimpleResult](
 		"action_a",
-		func(ctx context.Context, sgctx ActionContext[*LevelTestState, *LevelTestSaga]) (ActionFuncResult[*SimpleResult], error) {
-			return ActionFuncResult[*SimpleResult]{Output: &SimpleResult{Value: "action_a"}}, nil
+		func(ctx context.Context, sgctx ActionContext[*LevelTestState, *LevelTestSaga]) (ActionResult[*SimpleResult], error) {
+			return ActionResult[*SimpleResult]{Output: &SimpleResult{Value: "action_a"}}, nil
 		},
 		func(ctx context.Context, sgctx ActionContext[*LevelTestState, *LevelTestSaga]) error {
 			return nil
@@ -41,8 +41,8 @@ func TestGetExecutionLevelsLinear(t *testing.T) {
 	
 	actionB := NewActionFunc[*LevelTestState, *LevelTestSaga, *SimpleResult](
 		"action_b",
-		func(ctx context.Context, sgctx ActionContext[*LevelTestState, *LevelTestSaga]) (ActionFuncResult[*SimpleResult], error) {
-			return ActionFuncResult[*SimpleResult]{Output: &SimpleResult{Value: "action_b"}}, nil
+		func(ctx context.Context, sgctx ActionContext[*LevelTestState, *LevelTestSaga]) (ActionResult[*SimpleResult], error) {
+			return ActionResult[*SimpleResult]{Output: &SimpleResult{Value: "action_b"}}, nil
 		},
 		func(ctx context.Context, sgctx ActionContext[*LevelTestState, *LevelTestSaga]) error {
 			return nil
@@ -51,8 +51,8 @@ func TestGetExecutionLevelsLinear(t *testing.T) {
 	
 	actionC := NewActionFunc[*LevelTestState, *LevelTestSaga, *SimpleResult](
 		"action_c",
-		func(ctx context.Context, sgctx ActionContext[*LevelTestState, *LevelTestSaga]) (ActionFuncResult[*SimpleResult], error) {
-			return ActionFuncResult[*SimpleResult]{Output: &SimpleResult{Value: "action_c"}}, nil
+		func(ctx context.Context, sgctx ActionContext[*LevelTestState, *LevelTestSaga]) (ActionResult[*SimpleResult], error) {
+			return ActionResult[*SimpleResult]{Output: &SimpleResult{Value: "action_c"}}, nil
 		},
 		func(ctx context.Context, sgctx ActionContext[*LevelTestState, *LevelTestSaga]) error {
 			return nil
@@ -136,8 +136,8 @@ func TestGetExecutionLevelsParallel(t *testing.T) {
 	// Create actions
 	actionA := NewActionFunc[*LevelTestState, *LevelTestSaga, *SimpleResult](
 		"action_a",
-		func(ctx context.Context, sgctx ActionContext[*LevelTestState, *LevelTestSaga]) (ActionFuncResult[*SimpleResult], error) {
-			return ActionFuncResult[*SimpleResult]{Output: &SimpleResult{Value: "action_a"}}, nil
+		func(ctx context.Context, sgctx ActionContext[*LevelTestState, *LevelTestSaga]) (ActionResult[*SimpleResult], error) {
+			return ActionResult[*SimpleResult]{Output: &SimpleResult{Value: "action_a"}}, nil
 		},
 		func(ctx context.Context, sgctx ActionContext[*LevelTestState, *LevelTestSaga]) error {
 			return nil
@@ -146,8 +146,8 @@ func TestGetExecutionLevelsParallel(t *testing.T) {
 	
 	actionB := NewActionFunc[*LevelTestState, *LevelTestSaga, *SimpleResult](
 		"action_b",
-		func(ctx context.Context, sgctx ActionContext[*LevelTestState, *LevelTestSaga]) (ActionFuncResult[*SimpleResult], error) {
-			return ActionFuncResult[*SimpleResult]{Output: &SimpleResult{Value: "action_b"}}, nil
+		func(ctx context.Context, sgctx ActionContext[*LevelTestState, *LevelTestSaga]) (ActionResult[*SimpleResult], error) {
+			return ActionResult[*SimpleResult]{Output: &SimpleResult{Value: "action_b"}}, nil
 		},
 		func(ctx context.Context, sgctx ActionContext[*LevelTestState, *LevelTestSaga]) error {
 			return nil
@@ -156,8 +156,8 @@ func TestGetExecutionLevelsParallel(t *testing.T) {
 	
 	actionC := NewActionFunc[*LevelTestState, *LevelTestSaga, *SimpleResult](
 		"action_c",
-		func(ctx context.Context, sgctx ActionContext[*LevelTestState, *LevelTestSaga]) (ActionFuncResult[*SimpleResult], error) {
-			return ActionFuncResult[*SimpleResult]{Output: &SimpleResult{Value: "action_c"}}, nil
+		func(ctx context.Context, sgctx ActionContext[*LevelTestState, *LevelTestSaga]) (ActionResult[*SimpleResult], error) {
+			return ActionResult[*SimpleResult]{Output: &SimpleResult{Value: "action_c"}}, nil
 		},
 		func(ctx context.Context, sgctx ActionContext[*LevelTestState, *LevelTestSaga]) error {
 			return nil
@@ -166,8 +166,8 @@ func TestGetExecutionLevelsParallel(t *testing.T) {
 	
 	actionD := NewActionFunc[*LevelTestState, *LevelTestSaga, *SimpleResult](
 		"action_d",
-		func(ctx context.Context, sgctx ActionContext[*LevelTestState, *LevelTestSaga]) (ActionFuncResult[*SimpleResult], error) {
-			return ActionFuncResult[*SimpleResult]{Output: &SimpleResult{Value: "action_d"}}, nil
+		func(ctx context.Context, sgctx ActionContext[*LevelTestState, *LevelTestSaga]) (ActionResult[*SimpleResult], error) {
+			return ActionResult[*SimpleResult]{Output: &SimpleResult{Value: "action_d"}}, nil
 		},
 		func(ctx context.Context, sgctx ActionContext[*LevelTestState, *LevelTestSaga]) error {
 			return nil
@@ -258,8 +258,8 @@ func TestGetExecutionLevelsThreeWayParallel(t *testing.T) {
 	// Create actions
 	setupAction := NewActionFunc[*LevelTestState, *LevelTestSaga, *SimpleResult](
 		"setup_action",
-		func(ctx context.Context, sgctx ActionContext[*LevelTestState, *LevelTestSaga]) (ActionFuncResult[*SimpleResult], error) {
-			return ActionFuncResult[*SimpleResult]{Output: &SimpleResult{Value: "setup_action"}}, nil
+		func(ctx context.Context, sgctx ActionContext[*LevelTestState, *LevelTestSaga]) (ActionResult[*SimpleResult], error) {
+			return ActionResult[*SimpleResult]{Output: &SimpleResult{Value: "setup_action"}}, nil
 		},
 		func(ctx context.Context, sgctx ActionContext[*LevelTestState, *LevelTestSaga]) error {
 			return nil
@@ -268,8 +268,8 @@ func TestGetExecutionLevelsThreeWayParallel(t *testing.T) {
 	
 	taskA := NewActionFunc[*LevelTestState, *LevelTestSaga, *SimpleResult](
 		"task_a",
-		func(ctx context.Context, sgctx ActionContext[*LevelTestState, *LevelTestSaga]) (ActionFuncResult[*SimpleResult], error) {
-			return ActionFuncResult[*SimpleResult]{Output: &SimpleResult{Value: "task_a"}}, nil
+		func(ctx context.Context, sgctx ActionContext[*LevelTestState, *LevelTestSaga]) (ActionResult[*SimpleResult], error) {
+			return ActionResult[*SimpleResult]{Output: &SimpleResult{Value: "task_a"}}, nil
 		},
 		func(ctx context.Context, sgctx ActionContext[*LevelTestState, *LevelTestSaga]) error {
 			return nil
@@ -278,8 +278,8 @@ func TestGetExecutionLevelsThreeWayParallel(t *testing.T) {
 	
 	taskB := NewActionFunc[*LevelTestState, *LevelTestSaga, *SimpleResult](
 		"task_b",
-		func(ctx context.Context, sgctx ActionContext[*LevelTestState, *LevelTestSaga]) (ActionFuncResult[*SimpleResult], error) {
-			return ActionFuncResult[*SimpleResult]{Output: &SimpleResult{Value: "task_b"}}, nil
+		func(ctx context.Context, sgctx ActionContext[*LevelTestState, *LevelTestSaga]) (ActionResult[*SimpleResult], error) {
+			return ActionResult[*SimpleResult]{Output: &SimpleResult{Value: "task_b"}}, nil
 		},
 		func(ctx context.Context, sgctx ActionContext[*LevelTestState, *LevelTestSaga]) error {
 			return nil
@@ -288,8 +288,8 @@ func TestGetExecutionLevelsThreeWayParallel(t *testing.T) {
 	
 	taskC := NewActionFunc[*LevelTestState, *LevelTestSaga, *SimpleResult](
 		"task_c",
-		func(ctx context.Context, sgctx ActionContext[*LevelTestState, *LevelTestSaga]) (ActionFuncResult[*SimpleResult], error) {
-			return ActionFuncResult[*SimpleResult]{Output: &SimpleResult{Value: "task_c"}}, nil
+		func(ctx context.Context, sgctx ActionContext[*LevelTestState, *LevelTestSaga]) (ActionResult[*SimpleResult], error) {
+			return ActionResult[*SimpleResult]{Output: &SimpleResult{Value: "task_c"}}, nil
 		},
 		func(ctx context.Context, sgctx ActionContext[*LevelTestState, *LevelTestSaga]) error {
 			return nil
@@ -298,8 +298,8 @@ func TestGetExecutionLevelsThreeWayParallel(t *testing.T) {
 	
 	cleanupAction := NewActionFunc[*LevelTestState, *LevelTestSaga, *SimpleResult](
 		"cleanup_action",
-		func(ctx context.Context, sgctx ActionContext[*LevelTestState, *LevelTestSaga]) (ActionFuncResult[*SimpleResult], error) {
-			return ActionFuncResult[*SimpleResult]{Output: &SimpleResult{Value: "cleanup_action"}}, nil
+		func(ctx context.Context, sgctx ActionContext[*LevelTestState, *LevelTestSaga]) (ActionResult[*SimpleResult], error) {
+			return ActionResult[*SimpleResult]{Output: &SimpleResult{Value: "cleanup_action"}}, nil
 		},
 		func(ctx context.Context, sgctx ActionContext[*LevelTestState, *LevelTestSaga]) error {
 			return nil
@@ -399,8 +399,8 @@ func TestGetExecutionLevelsComplex(t *testing.T) {
 	// Create actions
 	actionA := NewActionFunc[*LevelTestState, *LevelTestSaga, *SimpleResult](
 		"action_a",
-		func(ctx context.Context, sgctx ActionContext[*LevelTestState, *LevelTestSaga]) (ActionFuncResult[*SimpleResult], error) {
-			return ActionFuncResult[*SimpleResult]{Output: &SimpleResult{Value: "action_a"}}, nil
+		func(ctx context.Context, sgctx ActionContext[*LevelTestState, *LevelTestSaga]) (ActionResult[*SimpleResult], error) {
+			return ActionResult[*SimpleResult]{Output: &SimpleResult{Value: "action_a"}}, nil
 		},
 		func(ctx context.Context, sgctx ActionContext[*LevelTestState, *LevelTestSaga]) error {
 			return nil
@@ -409,8 +409,8 @@ func TestGetExecutionLevelsComplex(t *testing.T) {
 	
 	actionB := NewActionFunc[*LevelTestState, *LevelTestSaga, *SimpleResult](
 		"action_b",
-		func(ctx context.Context, sgctx ActionContext[*LevelTestState, *LevelTestSaga]) (ActionFuncResult[*SimpleResult], error) {
-			return ActionFuncResult[*SimpleResult]{Output: &SimpleResult{Value: "action_b"}}, nil
+		func(ctx context.Context, sgctx ActionContext[*LevelTestState, *LevelTestSaga]) (ActionResult[*SimpleResult], error) {
+			return ActionResult[*SimpleResult]{Output: &SimpleResult{Value: "action_b"}}, nil
 		},
 		func(ctx context.Context, sgctx ActionContext[*LevelTestState, *LevelTestSaga]) error {
 			return nil
@@ -419,8 +419,8 @@ func TestGetExecutionLevelsComplex(t *testing.T) {
 	
 	actionC := NewActionFunc[*LevelTestState, *LevelTestSaga, *SimpleResult](
 		"action_c",
-		func(ctx context.Context, sgctx ActionContext[*LevelTestState, *LevelTestSaga]) (ActionFuncResult[*SimpleResult], error) {
-			return ActionFuncResult[*SimpleResult]{Output: &SimpleResult{Value: "action_c"}}, nil
+		func(ctx context.Context, sgctx ActionContext[*LevelTestState, *LevelTestSaga]) (ActionResult[*SimpleResult], error) {
+			return ActionResult[*SimpleResult]{Output: &SimpleResult{Value: "action_c"}}, nil
 		},
 		func(ctx context.Context, sgctx ActionContext[*LevelTestState, *LevelTestSaga]) error {
 			return nil
@@ -429,8 +429,8 @@ func TestGetExecutionLevelsComplex(t *testing.T) {
 	
 	actionD := NewActionFunc[*LevelTestState, *LevelTestSaga, *SimpleResult](
 		"action_d",
-		func(ctx context.Context, sgctx ActionContext[*LevelTestState, *LevelTestSaga]) (ActionFuncResult[*SimpleResult], error) {
-			return ActionFuncResult[*SimpleResult]{Output: &SimpleResult{Value: "action_d"}}, nil
+		func(ctx context.Context, sgctx ActionContext[*LevelTestState, *LevelTestSaga]) (ActionResult[*SimpleResult], error) {
+			return ActionResult[*SimpleResult]{Output: &SimpleResult{Value: "action_d"}}, nil
 		},
 		func(ctx context.Context, sgctx ActionContext[*LevelTestState, *LevelTestSaga]) error {
 			return nil
@@ -439,8 +439,8 @@ func TestGetExecutionLevelsComplex(t *testing.T) {
 	
 	actionE := NewActionFunc[*LevelTestState, *LevelTestSaga, *SimpleResult](
 		"action_e",
-		func(ctx context.Context, sgctx ActionContext[*LevelTestState, *LevelTestSaga]) (ActionFuncResult[*SimpleResult], error) {
-			return ActionFuncResult[*SimpleResult]{Output: &SimpleResult{Value: "action_e"}}, nil
+		func(ctx context.Context, sgctx ActionContext[*LevelTestState, *LevelTestSaga]) (ActionResult[*SimpleResult], error) {
+			return ActionResult[*SimpleResult]{Output: &SimpleResult{Value: "action_e"}}, nil
 		},
 		func(ctx context.Context, sgctx ActionContext[*LevelTestState, *LevelTestSaga]) error {
 			return nil
@@ -449,8 +449,8 @@ func TestGetExecutionLevelsComplex(t *testing.T) {
 	
 	actionF := NewActionFunc[*LevelTestState, *LevelTestSaga, *SimpleResult](
 		"action_f",
-		func(ctx context.Context, sgctx ActionContext[*LevelTestState, *LevelTestSaga]) (ActionFuncResult[*SimpleResult], error) {
-			return ActionFuncResult[*SimpleResult]{Output: &SimpleResult{Value: "action_f"}}, nil
+		func(ctx context.Context, sgctx ActionContext[*LevelTestState, *LevelTestSaga]) (ActionResult[*SimpleResult], error) {
+			return ActionResult[*SimpleResult]{Output: &SimpleResult{Value: "action_f"}}, nil
 		},
 		func(ctx context.Context, sgctx ActionContext[*LevelTestState, *LevelTestSaga]) error {
 			return nil

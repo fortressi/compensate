@@ -237,7 +237,7 @@ func registerParallelTestActions(t *testing.T, registry *ActionRegistry[*Paralle
 	// Setup action
 	setupAction := NewActionFunc[*ParallelTestState, *ParallelTestSaga, *ParallelResult](
 		"setup_action",
-		func(ctx context.Context, sgctx ActionContext[*ParallelTestState, *ParallelTestSaga]) (ActionFuncResult[*ParallelResult], error) {
+		func(ctx context.Context, sgctx ActionContext[*ParallelTestState, *ParallelTestSaga]) (ActionResult[*ParallelResult], error) {
 			state := sgctx.UserContext
 			state.StepResults = append(state.StepResults, "setup")
 			
@@ -245,7 +245,7 @@ func registerParallelTestActions(t *testing.T, registry *ActionRegistry[*Paralle
 				StepName: "setup",
 				Value:    "resources_ready",
 			}
-			return ActionFuncResult[*ParallelResult]{Output: result}, nil
+			return ActionResult[*ParallelResult]{Output: result}, nil
 		},
 		func(ctx context.Context, sgctx ActionContext[*ParallelTestState, *ParallelTestSaga]) error {
 			state := sgctx.UserContext
@@ -257,13 +257,13 @@ func registerParallelTestActions(t *testing.T, registry *ActionRegistry[*Paralle
 	// TaskA action  
 	taskAAction := NewActionFunc[*ParallelTestState, *ParallelTestSaga, *ParallelResult](
 		"task_a_action",
-		func(ctx context.Context, sgctx ActionContext[*ParallelTestState, *ParallelTestSaga]) (ActionFuncResult[*ParallelResult], error) {
+		func(ctx context.Context, sgctx ActionContext[*ParallelTestState, *ParallelTestSaga]) (ActionResult[*ParallelResult], error) {
 			state := sgctx.UserContext
 			
 			// Verify setup completed
 			setupResult, found := LookupTyped[*ParallelResult](sgctx, "setup")
 			if !found || setupResult.Value != "resources_ready" {
-				return ActionFuncResult[*ParallelResult]{}, fmt.Errorf("taskA requires setup to complete first")
+				return ActionResult[*ParallelResult]{}, fmt.Errorf("taskA requires setup to complete first")
 			}
 			
 			state.StepResults = append(state.StepResults, "taskA")
@@ -272,7 +272,7 @@ func registerParallelTestActions(t *testing.T, registry *ActionRegistry[*Paralle
 				StepName: "taskA",
 				Value:    "task_a_completed",
 			}
-			return ActionFuncResult[*ParallelResult]{Output: result}, nil
+			return ActionResult[*ParallelResult]{Output: result}, nil
 		},
 		func(ctx context.Context, sgctx ActionContext[*ParallelTestState, *ParallelTestSaga]) error {
 			state := sgctx.UserContext
@@ -290,13 +290,13 @@ func registerParallelTestActions(t *testing.T, registry *ActionRegistry[*Paralle
 	// TaskB action
 	taskBAction := NewActionFunc[*ParallelTestState, *ParallelTestSaga, *ParallelResult](
 		"task_b_action",
-		func(ctx context.Context, sgctx ActionContext[*ParallelTestState, *ParallelTestSaga]) (ActionFuncResult[*ParallelResult], error) {
+		func(ctx context.Context, sgctx ActionContext[*ParallelTestState, *ParallelTestSaga]) (ActionResult[*ParallelResult], error) {
 			state := sgctx.UserContext
 			
 			// Verify setup completed
 			setupResult, found := LookupTyped[*ParallelResult](sgctx, "setup")
 			if !found || setupResult.Value != "resources_ready" {
-				return ActionFuncResult[*ParallelResult]{}, fmt.Errorf("taskB requires setup to complete first")
+				return ActionResult[*ParallelResult]{}, fmt.Errorf("taskB requires setup to complete first")
 			}
 			
 			state.StepResults = append(state.StepResults, "taskB")
@@ -305,7 +305,7 @@ func registerParallelTestActions(t *testing.T, registry *ActionRegistry[*Paralle
 				StepName: "taskB",
 				Value:    "task_b_completed",
 			}
-			return ActionFuncResult[*ParallelResult]{Output: result}, nil
+			return ActionResult[*ParallelResult]{Output: result}, nil
 		},
 		func(ctx context.Context, sgctx ActionContext[*ParallelTestState, *ParallelTestSaga]) error {
 			state := sgctx.UserContext
@@ -323,9 +323,9 @@ func registerParallelTestActions(t *testing.T, registry *ActionRegistry[*Paralle
 	// TaskB fail action (for failure testing)
 	taskBFailAction := NewActionFunc[*ParallelTestState, *ParallelTestSaga, *ParallelResult](
 		"task_b_fail_action",
-		func(ctx context.Context, sgctx ActionContext[*ParallelTestState, *ParallelTestSaga]) (ActionFuncResult[*ParallelResult], error) {
+		func(ctx context.Context, sgctx ActionContext[*ParallelTestState, *ParallelTestSaga]) (ActionResult[*ParallelResult], error) {
 			// Always fail
-			return ActionFuncResult[*ParallelResult]{}, fmt.Errorf("taskB_fail intentionally fails")
+			return ActionResult[*ParallelResult]{}, fmt.Errorf("taskB_fail intentionally fails")
 		},
 		func(ctx context.Context, sgctx ActionContext[*ParallelTestState, *ParallelTestSaga]) error {
 			// Nothing to undo since it failed
@@ -336,7 +336,7 @@ func registerParallelTestActions(t *testing.T, registry *ActionRegistry[*Paralle
 	// Cleanup action
 	cleanupAction := NewActionFunc[*ParallelTestState, *ParallelTestSaga, *ParallelResult](
 		"cleanup_action",
-		func(ctx context.Context, sgctx ActionContext[*ParallelTestState, *ParallelTestSaga]) (ActionFuncResult[*ParallelResult], error) {
+		func(ctx context.Context, sgctx ActionContext[*ParallelTestState, *ParallelTestSaga]) (ActionResult[*ParallelResult], error) {
 			state := sgctx.UserContext
 			
 			// Verify both tasks completed
@@ -344,11 +344,11 @@ func registerParallelTestActions(t *testing.T, registry *ActionRegistry[*Paralle
 			taskBResult, foundB := LookupTyped[*ParallelResult](sgctx, "taskB")
 			
 			if !foundA || !foundB {
-				return ActionFuncResult[*ParallelResult]{}, fmt.Errorf("cleanup requires both taskA and taskB to complete")
+				return ActionResult[*ParallelResult]{}, fmt.Errorf("cleanup requires both taskA and taskB to complete")
 			}
 			
 			if taskAResult.Value != "task_a_completed" || taskBResult.Value != "task_b_completed" {
-				return ActionFuncResult[*ParallelResult]{}, fmt.Errorf("cleanup requires both tasks to have succeeded")
+				return ActionResult[*ParallelResult]{}, fmt.Errorf("cleanup requires both tasks to have succeeded")
 			}
 			
 			state.StepResults = append(state.StepResults, "cleanup")
@@ -358,7 +358,7 @@ func registerParallelTestActions(t *testing.T, registry *ActionRegistry[*Paralle
 				StepName: "cleanup",
 				Value:    "cleanup_completed",
 			}
-			return ActionFuncResult[*ParallelResult]{Output: result}, nil
+			return ActionResult[*ParallelResult]{Output: result}, nil
 		},
 		func(ctx context.Context, sgctx ActionContext[*ParallelTestState, *ParallelTestSaga]) error {
 			state := sgctx.UserContext
@@ -377,7 +377,7 @@ func registerParallelTestActions(t *testing.T, registry *ActionRegistry[*Paralle
 	// Final action (for DAG structure requirements)
 	finalAction := NewActionFunc[*ParallelTestState, *ParallelTestSaga, *ParallelResult](
 		"final_action",
-		func(ctx context.Context, sgctx ActionContext[*ParallelTestState, *ParallelTestSaga]) (ActionFuncResult[*ParallelResult], error) {
+		func(ctx context.Context, sgctx ActionContext[*ParallelTestState, *ParallelTestSaga]) (ActionResult[*ParallelResult], error) {
 			state := sgctx.UserContext
 			state.StepResults = append(state.StepResults, "final")
 			
@@ -385,7 +385,7 @@ func registerParallelTestActions(t *testing.T, registry *ActionRegistry[*Paralle
 				StepName: "final",
 				Value:    "final_completed",
 			}
-			return ActionFuncResult[*ParallelResult]{Output: result}, nil
+			return ActionResult[*ParallelResult]{Output: result}, nil
 		},
 		func(ctx context.Context, sgctx ActionContext[*ParallelTestState, *ParallelTestSaga]) error {
 			state := sgctx.UserContext

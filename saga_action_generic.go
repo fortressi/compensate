@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/tidwall/btree"
 )
@@ -123,7 +124,46 @@ func (ac *ActionConstant[T]) Name() ActionName {
 
 // ActionResult represents the result of a saga action.
 type ActionResult[T any] struct {
-	Output T
+	Output    T                      // The output data from the action
+	StartTime time.Time              // Set by SEC when action execution starts
+	EndTime   time.Time              // Set by SEC when action execution completes
+	Warnings  []string               // Non-fatal issues encountered during execution
+	Metrics   map[string]interface{} // Performance/debugging metrics from the action
+}
+
+// NewActionResult creates a new ActionResult with the given output.
+// Timing information should be set by the SEC, not by actions.
+func NewActionResult[T any](output T) ActionResult[T] {
+	return ActionResult[T]{
+		Output:   output,
+		Warnings: []string{},
+		Metrics:  make(map[string]interface{}),
+	}
+}
+
+// AddWarning adds a non-fatal warning message to the result.
+func (r *ActionResult[T]) AddWarning(msg string) {
+	if r.Warnings == nil {
+		r.Warnings = []string{}
+	}
+	r.Warnings = append(r.Warnings, msg)
+}
+
+// SetMetric adds a performance or debugging metric to the result.
+func (r *ActionResult[T]) SetMetric(key string, value interface{}) {
+	if r.Metrics == nil {
+		r.Metrics = make(map[string]interface{})
+	}
+	r.Metrics[key] = value
+}
+
+// Duration returns the duration of the action execution.
+// Returns zero duration if timing information is not yet set by SEC.
+func (r *ActionResult[T]) Duration() time.Duration {
+	if r.StartTime.IsZero() || r.EndTime.IsZero() {
+		return 0
+	}
+	return r.EndTime.Sub(r.StartTime)
 }
 
 // EmptyOutput is an empty struct type used for ActionInjectError.

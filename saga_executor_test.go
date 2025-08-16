@@ -72,11 +72,11 @@ func TestSagaExecutorSequential(t *testing.T) {
 	// Create and register actions
 	validateAction := NewActionFunc[*OrderProcessingState, *OrderProcessingSaga, *ExecutorValidationResult](
 		"validate_order",
-		func(ctx context.Context, sgctx ActionContext[*OrderProcessingState, *OrderProcessingSaga]) (ActionFuncResult[*ExecutorValidationResult], error) {
+		func(ctx context.Context, sgctx ActionContext[*OrderProcessingState, *OrderProcessingSaga]) (ActionResult[*ExecutorValidationResult], error) {
 			state := sgctx.UserContext
 			result := &ExecutorValidationResult{Valid: true, Message: "Order is valid"}
 			state.ValidationMsg = result.Message
-			return ActionFuncResult[*ExecutorValidationResult]{Output: result}, nil
+			return ActionResult[*ExecutorValidationResult]{Output: result}, nil
 		},
 		func(ctx context.Context, sgctx ActionContext[*OrderProcessingState, *OrderProcessingSaga]) error {
 			state := sgctx.UserContext
@@ -87,11 +87,11 @@ func TestSagaExecutorSequential(t *testing.T) {
 	
 	paymentAction := NewActionFunc[*OrderProcessingState, *OrderProcessingSaga, *ExecutorPaymentResult](
 		"process_payment",
-		func(ctx context.Context, sgctx ActionContext[*OrderProcessingState, *OrderProcessingSaga]) (ActionFuncResult[*ExecutorPaymentResult], error) {
+		func(ctx context.Context, sgctx ActionContext[*OrderProcessingState, *OrderProcessingSaga]) (ActionResult[*ExecutorPaymentResult], error) {
 			state := sgctx.UserContext
 			result := &ExecutorPaymentResult{PaymentID: "payment-" + state.OrderID, TransactionID: "txn-" + state.OrderID}
 			state.PaymentID = result.PaymentID
-			return ActionFuncResult[*ExecutorPaymentResult]{Output: result}, nil
+			return ActionResult[*ExecutorPaymentResult]{Output: result}, nil
 		},
 		func(ctx context.Context, sgctx ActionContext[*OrderProcessingState, *OrderProcessingSaga]) error {
 			state := sgctx.UserContext
@@ -102,11 +102,11 @@ func TestSagaExecutorSequential(t *testing.T) {
 	
 	inventoryAction := NewActionFunc[*OrderProcessingState, *OrderProcessingSaga, *ExecutorInventoryResult](
 		"update_inventory",
-		func(ctx context.Context, sgctx ActionContext[*OrderProcessingState, *OrderProcessingSaga]) (ActionFuncResult[*ExecutorInventoryResult], error) {
+		func(ctx context.Context, sgctx ActionContext[*OrderProcessingState, *OrderProcessingSaga]) (ActionResult[*ExecutorInventoryResult], error) {
 			state := sgctx.UserContext
 			result := &ExecutorInventoryResult{TransactionID: "inv-txn-" + state.OrderID, ItemsReserved: 1}
 			state.InventoryTxn = result.TransactionID
-			return ActionFuncResult[*ExecutorInventoryResult]{Output: result}, nil
+			return ActionResult[*ExecutorInventoryResult]{Output: result}, nil
 		},
 		func(ctx context.Context, sgctx ActionContext[*OrderProcessingState, *OrderProcessingSaga]) error {
 			state := sgctx.UserContext
@@ -117,11 +117,11 @@ func TestSagaExecutorSequential(t *testing.T) {
 	
 	confirmationAction := NewActionFunc[*OrderProcessingState, *OrderProcessingSaga, *ExecutorConfirmationResult](
 		"send_confirmation",
-		func(ctx context.Context, sgctx ActionContext[*OrderProcessingState, *OrderProcessingSaga]) (ActionFuncResult[*ExecutorConfirmationResult], error) {
+		func(ctx context.Context, sgctx ActionContext[*OrderProcessingState, *OrderProcessingSaga]) (ActionResult[*ExecutorConfirmationResult], error) {
 			state := sgctx.UserContext
 			result := &ExecutorConfirmationResult{ConfirmationID: "conf-" + state.OrderID, SentAt: "2023-01-01T00:00:00Z"}
 			state.Confirmed = true
-			return ActionFuncResult[*ExecutorConfirmationResult]{Output: result}, nil
+			return ActionResult[*ExecutorConfirmationResult]{Output: result}, nil
 		},
 		func(ctx context.Context, sgctx ActionContext[*OrderProcessingState, *OrderProcessingSaga]) error {
 			state := sgctx.UserContext
@@ -237,7 +237,7 @@ func TestSagaExecutorWithFailure(t *testing.T) {
 	// Create actions inline for this test
 	validateAction := NewActionFunc[*OrderProcessingState, *OrderProcessingSaga, *ExecutorValidationResult](
 		"validate_order",
-		func(ctx context.Context, sgctx ActionContext[*OrderProcessingState, *OrderProcessingSaga]) (ActionFuncResult[*ExecutorValidationResult], error) {
+		func(ctx context.Context, sgctx ActionContext[*OrderProcessingState, *OrderProcessingSaga]) (ActionResult[*ExecutorValidationResult], error) {
 			state := sgctx.UserContext
 			
 			result := &ExecutorValidationResult{
@@ -246,13 +246,13 @@ func TestSagaExecutorWithFailure(t *testing.T) {
 			}
 			
 			if !result.Valid {
-				return ActionFuncResult[*ExecutorValidationResult]{}, fmt.Errorf("order validation failed")
+				return ActionResult[*ExecutorValidationResult]{}, fmt.Errorf("order validation failed")
 			}
 			
 			// Update saga state
 			state.ValidationMsg = result.Message
 			
-			return ActionFuncResult[*ExecutorValidationResult]{Output: result}, nil
+			return ActionResult[*ExecutorValidationResult]{Output: result}, nil
 		},
 		func(ctx context.Context, sgctx ActionContext[*OrderProcessingState, *OrderProcessingSaga]) error {
 			// Undo validation
@@ -264,23 +264,23 @@ func TestSagaExecutorWithFailure(t *testing.T) {
 
 	paymentAction := NewActionFunc[*OrderProcessingState, *OrderProcessingSaga, *ExecutorPaymentResult](
 		"process_payment",
-		func(ctx context.Context, sgctx ActionContext[*OrderProcessingState, *OrderProcessingSaga]) (ActionFuncResult[*ExecutorPaymentResult], error) {
+		func(ctx context.Context, sgctx ActionContext[*OrderProcessingState, *OrderProcessingSaga]) (ActionResult[*ExecutorPaymentResult], error) {
 			state := sgctx.UserContext
 			
 			// Check validation result from previous step
 			validationOutput, found := LookupTyped[*ExecutorValidationResult](sgctx, "validate")
 			if !found || !validationOutput.Valid {
-				return ActionFuncResult[*ExecutorPaymentResult]{}, fmt.Errorf("cannot process payment: validation failed")
+				return ActionResult[*ExecutorPaymentResult]{}, fmt.Errorf("cannot process payment: validation failed")
 			}
 			
 			// Simulate payment failure for negative amounts or bad customers
 			if state.Amount <= 0 {
-				return ActionFuncResult[*ExecutorPaymentResult]{}, fmt.Errorf("invalid payment amount: %f", state.Amount)
+				return ActionResult[*ExecutorPaymentResult]{}, fmt.Errorf("invalid payment amount: %f", state.Amount)
 			}
 			
 			// Simulate payment failure for specific customer
 			if state.CustomerID == "customer-bad" {
-				return ActionFuncResult[*ExecutorPaymentResult]{}, fmt.Errorf("payment declined for customer: %s", state.CustomerID)
+				return ActionResult[*ExecutorPaymentResult]{}, fmt.Errorf("payment declined for customer: %s", state.CustomerID)
 			}
 			
 			result := &ExecutorPaymentResult{
@@ -291,7 +291,7 @@ func TestSagaExecutorWithFailure(t *testing.T) {
 			// Update saga state
 			state.PaymentID = result.PaymentID
 			
-			return ActionFuncResult[*ExecutorPaymentResult]{Output: result}, nil
+			return ActionResult[*ExecutorPaymentResult]{Output: result}, nil
 		},
 		func(ctx context.Context, sgctx ActionContext[*OrderProcessingState, *OrderProcessingSaga]) error {
 			// Undo payment (refund)

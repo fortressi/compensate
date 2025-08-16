@@ -20,8 +20,8 @@ func TestGetExecutionLevelsDetectsCircularDependency(t *testing.T) {
 	// Create simple actions
 	actionA := NewActionFunc[*LevelTestState, *LevelTestSaga, *SimpleResult](
 		"action_a",
-		func(ctx context.Context, sgctx ActionContext[*LevelTestState, *LevelTestSaga]) (ActionFuncResult[*SimpleResult], error) {
-			return ActionFuncResult[*SimpleResult]{Output: &SimpleResult{Value: "action_a"}}, nil
+		func(ctx context.Context, sgctx ActionContext[*LevelTestState, *LevelTestSaga]) (ActionResult[*SimpleResult], error) {
+			return ActionResult[*SimpleResult]{Output: &SimpleResult{Value: "action_a"}}, nil
 		},
 		func(ctx context.Context, sgctx ActionContext[*LevelTestState, *LevelTestSaga]) error {
 			return nil
@@ -30,8 +30,8 @@ func TestGetExecutionLevelsDetectsCircularDependency(t *testing.T) {
 	
 	actionB := NewActionFunc[*LevelTestState, *LevelTestSaga, *SimpleResult](
 		"action_b",
-		func(ctx context.Context, sgctx ActionContext[*LevelTestState, *LevelTestSaga]) (ActionFuncResult[*SimpleResult], error) {
-			return ActionFuncResult[*SimpleResult]{Output: &SimpleResult{Value: "action_b"}}, nil
+		func(ctx context.Context, sgctx ActionContext[*LevelTestState, *LevelTestSaga]) (ActionResult[*SimpleResult], error) {
+			return ActionResult[*SimpleResult]{Output: &SimpleResult{Value: "action_b"}}, nil
 		},
 		func(ctx context.Context, sgctx ActionContext[*LevelTestState, *LevelTestSaga]) error {
 			return nil
@@ -40,8 +40,8 @@ func TestGetExecutionLevelsDetectsCircularDependency(t *testing.T) {
 	
 	actionC := NewActionFunc[*LevelTestState, *LevelTestSaga, *SimpleResult](
 		"action_c",
-		func(ctx context.Context, sgctx ActionContext[*LevelTestState, *LevelTestSaga]) (ActionFuncResult[*SimpleResult], error) {
-			return ActionFuncResult[*SimpleResult]{Output: &SimpleResult{Value: "action_c"}}, nil
+		func(ctx context.Context, sgctx ActionContext[*LevelTestState, *LevelTestSaga]) (ActionResult[*SimpleResult], error) {
+			return ActionResult[*SimpleResult]{Output: &SimpleResult{Value: "action_c"}}, nil
 		},
 		func(ctx context.Context, sgctx ActionContext[*LevelTestState, *LevelTestSaga]) error {
 			return nil
@@ -122,8 +122,8 @@ func TestGetExecutionLevelsEmptyDAG(t *testing.T) {
 	// Create dummy action
 	dummyAction := NewActionFunc[*LevelTestState, *LevelTestSaga, *SimpleResult](
 		"dummy_action",
-		func(ctx context.Context, sgctx ActionContext[*LevelTestState, *LevelTestSaga]) (ActionFuncResult[*SimpleResult], error) {
-			return ActionFuncResult[*SimpleResult]{Output: &SimpleResult{Value: "dummy_action"}}, nil
+		func(ctx context.Context, sgctx ActionContext[*LevelTestState, *LevelTestSaga]) (ActionResult[*SimpleResult], error) {
+			return ActionResult[*SimpleResult]{Output: &SimpleResult{Value: "dummy_action"}}, nil
 		},
 		func(ctx context.Context, sgctx ActionContext[*LevelTestState, *LevelTestSaga]) error {
 			return nil
@@ -170,8 +170,8 @@ func TestGetExecutionLevelsSingleAction(t *testing.T) {
 	// Create only action
 	onlyAction := NewActionFunc[*LevelTestState, *LevelTestSaga, *SimpleResult](
 		"only_action",
-		func(ctx context.Context, sgctx ActionContext[*LevelTestState, *LevelTestSaga]) (ActionFuncResult[*SimpleResult], error) {
-			return ActionFuncResult[*SimpleResult]{Output: &SimpleResult{Value: "only_action"}}, nil
+		func(ctx context.Context, sgctx ActionContext[*LevelTestState, *LevelTestSaga]) (ActionResult[*SimpleResult], error) {
+			return ActionResult[*SimpleResult]{Output: &SimpleResult{Value: "only_action"}}, nil
 		},
 		func(ctx context.Context, sgctx ActionContext[*LevelTestState, *LevelTestSaga]) error {
 			return nil

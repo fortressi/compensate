@@ -37,8 +37,12 @@ type State[T any] struct {
 // CompletedAction records an action that has been successfully executed,
 // along with its output for use by dependent actions during rollback.
 type CompletedAction struct {
-	Name   string          `json:"name"`
-	Output json.RawMessage `json:"output,omitempty"`
+	Name      string                 `json:"name"`
+	Output    json.RawMessage        `json:"output,omitempty"`
+	StartTime time.Time              `json:"start_time"`
+	EndTime   time.Time              `json:"end_time"`
+	Warnings  []string               `json:"warnings,omitempty"`
+	Metrics   map[string]interface{} `json:"metrics,omitempty"`
 }
 
 // Saga status constants

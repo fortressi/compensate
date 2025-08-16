@@ -110,7 +110,7 @@ func TestActionWithSagaState(t *testing.T) {
 	// This shows how an action would access saga state
 	processPaymentAction := NewActionFunc[*OrderSagaState, *OrderSagaContext, *PaymentResult](
 		"process_payment",
-		func(ctx context.Context, sgctx ActionContext[*OrderSagaState, *OrderSagaContext]) (ActionFuncResult[*PaymentResult], error) {
+		func(ctx context.Context, sgctx ActionContext[*OrderSagaState, *OrderSagaContext]) (ActionResult[*PaymentResult], error) {
 			// Access saga state through the context
 			orderState := sgctx.UserContext
 
@@ -124,7 +124,7 @@ func TestActionWithSagaState(t *testing.T) {
 			// Update saga state
 			orderState.PaymentID = result.PaymentID
 
-			return ActionFuncResult[*PaymentResult]{Output: result}, nil
+			return ActionResult[*PaymentResult]{Output: result}, nil
 		},
 		func(ctx context.Context, sgctx ActionContext[*OrderSagaState, *OrderSagaContext]) error {
 			// Compensate by refunding

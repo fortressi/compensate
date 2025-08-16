@@ -32,8 +32,8 @@ func TestNewDagBuilderAPI(t *testing.T) {
 	// Create some test actions
 	validateAction := NewActionFunc[*NewTestState, *NewTestSaga, *SimpleResult](
 		"validate_action",
-		func(ctx context.Context, sgctx ActionContext[*NewTestState, *NewTestSaga]) (ActionFuncResult[*SimpleResult], error) {
-			return ActionFuncResult[*SimpleResult]{Output: &SimpleResult{Value: "validated"}}, nil
+		func(ctx context.Context, sgctx ActionContext[*NewTestState, *NewTestSaga]) (ActionResult[*SimpleResult], error) {
+			return ActionResult[*SimpleResult]{Output: &SimpleResult{Value: "validated"}}, nil
 		},
 		func(ctx context.Context, sgctx ActionContext[*NewTestState, *NewTestSaga]) error {
 			return nil
@@ -42,8 +42,8 @@ func TestNewDagBuilderAPI(t *testing.T) {
 
 	paymentAction := NewActionFunc[*NewTestState, *NewTestSaga, *SimpleResult](
 		"payment_action",
-		func(ctx context.Context, sgctx ActionContext[*NewTestState, *NewTestSaga]) (ActionFuncResult[*SimpleResult], error) {
-			return ActionFuncResult[*SimpleResult]{Output: &SimpleResult{Value: "paid"}}, nil
+		func(ctx context.Context, sgctx ActionContext[*NewTestState, *NewTestSaga]) (ActionResult[*SimpleResult], error) {
+			return ActionResult[*SimpleResult]{Output: &SimpleResult{Value: "paid"}}, nil
 		},
 		func(ctx context.Context, sgctx ActionContext[*NewTestState, *NewTestSaga]) error {
 			return nil
@@ -52,8 +52,8 @@ func TestNewDagBuilderAPI(t *testing.T) {
 
 	inventoryAction := NewActionFunc[*NewTestState, *NewTestSaga, *SimpleResult](
 		"inventory_action", 
-		func(ctx context.Context, sgctx ActionContext[*NewTestState, *NewTestSaga]) (ActionFuncResult[*SimpleResult], error) {
-			return ActionFuncResult[*SimpleResult]{Output: &SimpleResult{Value: "reserved"}}, nil
+		func(ctx context.Context, sgctx ActionContext[*NewTestState, *NewTestSaga]) (ActionResult[*SimpleResult], error) {
+			return ActionResult[*SimpleResult]{Output: &SimpleResult{Value: "reserved"}}, nil
 		},
 		func(ctx context.Context, sgctx ActionContext[*NewTestState, *NewTestSaga]) error {
 			return nil
@@ -62,8 +62,8 @@ func TestNewDagBuilderAPI(t *testing.T) {
 
 	confirmAction := NewActionFunc[*NewTestState, *NewTestSaga, *SimpleResult](
 		"confirm_action",
-		func(ctx context.Context, sgctx ActionContext[*NewTestState, *NewTestSaga]) (ActionFuncResult[*SimpleResult], error) {
-			return ActionFuncResult[*SimpleResult]{Output: &SimpleResult{Value: "confirmed"}}, nil
+		func(ctx context.Context, sgctx ActionContext[*NewTestState, *NewTestSaga]) (ActionResult[*SimpleResult], error) {
+			return ActionResult[*SimpleResult]{Output: &SimpleResult{Value: "confirmed"}}, nil
 		},
 		func(ctx context.Context, sgctx ActionContext[*NewTestState, *NewTestSaga]) error {
 			return nil
