@@ -1,13 +1,13 @@
 module github.com/fortressi/compensate
 
-go 1.24
+go 1.24.0
 
 require (
 	github.com/google/uuid v1.6.0
 	github.com/puzpuzpuz/xsync/v3 v3.5.1
 	github.com/stretchr/testify v1.10.0
 	github.com/tidwall/btree v1.7.0
-	gonum.org/v1/gonum v0.16.0
+	gonum.org/v1/gonum v0.17.0
 )
 
 require (
